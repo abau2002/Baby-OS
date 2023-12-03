@@ -32,7 +32,10 @@ int main(int argc, char **argv){
   vector<PCB> processes;
   int fileIndex;
   ifstream inputFile;
-
+  Priority pri;
+  FCFS fcfs;
+  SJF sjf;
+  
   // ensures a default is present in case a value is not specified
   strcpy(pagerType,DEFAULT_PAGER_TYPE);
   strcpy(schedulerType,DEFAULT_SCHEDULER_TYPE);
@@ -136,7 +139,7 @@ int main(int argc, char **argv){
     block.arrival = atoi(arrival.c_str());
     block.burst = atoi(burst.c_str());
     block.priority = atoi(priority.c_str());
-
+    
     inputFile >> fileInput;
     while(fileInput.find(PID_FORM)==string::npos){
       if(addressErrorCheck(block.pid,atoi(frameSize),atoi(pages),fileInput)) exit(1);
@@ -156,9 +159,16 @@ int main(int argc, char **argv){
   inputFile.close();
 
   cout << "\nYay!\n";
+  ofstream processesFile("processes.txt");
   int size;
+  string CPUFile = "processes.txt";
   for(int i=0;i<processes.size();i++){
     cout << PID_FORM << processes.at(i).pid << " " << processes.at(i).arrival << " " << processes.at(i).burst << " " << processes.at(i).priority << endl;
+    processesFile<< processes.at(i).pid << " "
+		 << processes.at(i).arrival << " "
+		 << processes.at(i).burst << " "
+		 << processes.at(i).priority << endl;
+    
     size = processes.at(i).addresses.size();
     for(int j=0;j<size;j++){
       cout << processes.at(i).addresses.front() << endl;
@@ -167,6 +177,23 @@ int main(int argc, char **argv){
     cout << endl;
   }
   
+  processesFile.close();
+  if(schedulerType==FIRST_COME_FIRST_SERVE){
+    fcfs.loadProcessesFromFile(CPUFile);
+    fcfs.execute();
+  }
+  else if(schedulerType==SHORTEST_JOB_FIRST){
+    sjf.loadProcessesFromFile(CPUFile,true);
+    sjf.execute();
+  }
+  else if(schedulerType==PRIORITY){
+    pri.loadProcessesFromFile(CPUFile, true);
+    pri.execute();
+  }
+  
+  /*else if(schedulerType===ROUND_ROBIN){
+    rr.rrSchedule(flags[VERBOSE_FLAG],atoi(quanta.c_str()),pcb);
+    }*/
   
   return 0;
 }
