@@ -1,7 +1,3 @@
-
-
-
-
 // FILE: babyOS.cpp
 // A Bautista, B Franco, E Mora
 // OS, Fall 2023, Transy U
@@ -34,11 +30,13 @@ int main(int argc, char **argv){
   char pagerType[INPUT_MAX], frames[INPUT_MAX], pages[INPUT_MAX], frameSize[INPUT_MAX];
   char schedulerType[INPUT_MAX], quanta[INPUT_MAX], fileName[INPUT_MAX];
   vector<PCB> processes;
+  queue<PCB>  addressQueue;
   int fileIndex;
   ifstream inputFile;
   Priority pri;
   FCFS fcfs;
   SJF sjf;
+  PageReplacementSimulator pageSimulator;
   
   // ensures a default is present in case a value is not specified
   strcpy(pagerType,DEFAULT_PAGER_TYPE);
@@ -157,32 +155,58 @@ int main(int argc, char **argv){
       exit(1);
     }
 
+    queue<int> tempQueue = block.addresses;
+
     processes.push_back(block);
-    for(int i=0;i<block.burst;i++) block.addresses.pop();
-  }
+    while (!block.addresses.empty()) block.addresses.pop();
+        processes.back().addresses = tempQueue;
+    }
+
   inputFile.close();
 
   cout << "\nYay!\n";
   ofstream processesFile("processes.txt");
   int size;
   string CPUFile = "processes.txt";
-  for(int i=0;i<processes.size();i++){
-    cout << PID_FORM << processes.at(i).pid << " " << processes.at(i).arrival << " " << processes.at(i).burst << " " << processes.at(i).priority << endl;
-    processesFile<< "P_" <<processes.at(i).pid << " "
-		 << processes.at(i).arrival << " "
-		 << processes.at(i).burst << " "
-		 << processes.at(i).priority << endl;
-    
-    size = processes.at(i).addresses.size();
-    for(int j=0;j<size;j++){
-      cout << processes.at(i).addresses.front() << endl;
-      processes.at(i).addresses.pop();
-    }
-    cout << endl <<endl;
+  for(int i = 0; i < processes.size(); i++) {
+      cout << PID_FORM << processes.at(i).pid << " " << processes.at(i).arrival << " " << processes.at(i).burst << " " << processes.at(i).priority << endl;
+      processesFile << "P_" << processes.at(i).pid << " "
+                    << processes.at(i).arrival << " "
+                    << processes.at(i).burst << " "
+                    << processes.at(i).priority << endl;
+
+      // copy of addresses for print
+      queue<int> printQueue = processes.at(i).addresses;
+
+      while (!printQueue.empty()) {
+          cout << printQueue.front() << endl;
+          printQueue.pop();
+      }
+      cout << endl << endl;
   }
   
   processesFile.close();
-  
+
+  // for pager, while for subsequent processes it says that it has a number of page faults, but 
+  // it as actually the number of the previous faults plus the faults of itself, ex. P1 faults = 5, P2 faults = 14, P2 itself only had 9 faults.
+  if (strcmp(pagerType, FIRST_IN_FIRST_OUT) == 0 ||
+    strcmp(pagerType, LEAST_RECENT_USED) == 0 ||
+    strcmp(pagerType, MOST_FREQUENT_USED) == 0 ||
+    strcmp(pagerType, RANDOM) == 0) {
+
+    for (int i = 0; i < processes.size(); i++) {
+        queue<int> addressQueue = processes[i].addresses;
+        string pid = to_string(processes[i].pid);
+        int frameInt = atoi(frames);  
+        int pageInt = atoi(pages);    
+        int frameSizeInt = atoi(frameSize); 
+
+        PageTable pageTable(pageInt); 
+        pageSimulator.simulation(addressQueue, pid, pageTable, frameInt, pageInt, frameSizeInt, flags[VERBOSE_FLAG], pagerType);
+    }
+  }
+
+  // now for scheduler, apparently none of these work :(
   if (strcmp(schedulerType, FIRST_COME_FIRST_SERVE) == 0) {
     fcfs.loadProcessesFromFile(CPUFile);
     fcfs.execute();
@@ -196,7 +220,7 @@ int main(int argc, char **argv){
       sjf.loadProcessesFromFile(CPUFile, false);
       sjf.execute();
     }
-    
+
   } else if (strcmp(schedulerType, PRIORITY) == 0) {
     if (flags[PREEMPTIVE_FLAG]) {
       pri.loadProcessesFromFile(CPUFile, true);
@@ -207,6 +231,7 @@ int main(int argc, char **argv){
       pri.execute();
     }
   } 
+  
   /*else if(schedulerType===ROUND_ROBIN){
     rr.rrSchedule(flags[VERBOSE_FLAG],atoi(quanta.c_str()),pcb);
     }*/
@@ -217,7 +242,7 @@ int main(int argc, char **argv){
 bool addressErrorCheck(int pid,int pageSize, int pages, string address){
   if(!integerCheck(address)){
     cout << "\tERROR: Address " << address << " of " << PID_FORM << pid << " must be a non-negative integer\n";
-    return true;
+    return true;  
   }
   // check if a process's address is possible within given frames and size
   else if((atoi(address.c_str())/pageSize) >= pages){
