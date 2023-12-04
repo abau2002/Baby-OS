@@ -139,11 +139,11 @@ int main(int argc, char **argv){
     inputFile >> fileInput;
     for(int i=0;i<block.burst;i++){
       if(fileInput.find(PID_FORM)==string::npos) sameProcess=false;
-        if(!inputFile.eof() && !sameProcess){
-          if(addressErrorCheck(block.pid,atoi(frameSize),atoi(pages),fileInput)) exit(1);
-          block.addresses.push(atoi(fileInput.c_str()));
-          inputFile >> fileInput;
-        }
+      if(!inputFile.eof() && !sameProcess){
+        if(addressErrorCheck(block.pid,atoi(frameSize),atoi(pages),fileInput)) exit(1);
+        block.addresses.push(atoi(fileInput.c_str()));
+        inputFile >> fileInput;
+      }
     }
     if(block.burst!=block.addresses.size() || (!inputFile.eof() && fileInput.find(PID_FORM)==string::npos)){
       cout << "\tERROR: " << PID_FORM << block.pid << " must have a number of memory addresses equivalent to its burst time [1 address: 1 time unit]\n";
