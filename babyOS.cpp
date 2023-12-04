@@ -120,14 +120,7 @@ int main(int argc, char **argv){
 
   PCB block;
   string fileInput,arrival,burst,priority;
-
-  /* 
-    P_0 5 2 10 2 2
-    P_3 10 5 15
-    2 2
-    2
-    2 2
-  */
+  bool sameProcess;
 
   inputFile >> fileInput;
   while(!inputFile.eof()){
@@ -142,15 +135,17 @@ int main(int argc, char **argv){
     block.burst = atoi(burst.c_str());
     block.priority = atoi(priority.c_str());
     
+    sameProcess = true;
     inputFile >> fileInput;
-    while(fileInput.find(PID_FORM)==string::npos){
-      if(addressErrorCheck(block.pid,atoi(frameSize),atoi(pages),fileInput)) exit(1);
-      block.addresses.push(atoi(fileInput.c_str()));
-      if(inputFile.eof()) break;
-      inputFile >> fileInput;
+    for(int i=0;i<block.burst;i++){
+      if(fileInput.find(PID_FORM)==string::npos) sameProcess=false;
+        if(!inputFile.eof() && !sameProcess){
+          if(addressErrorCheck(block.pid,atoi(frameSize),atoi(pages),fileInput)) exit(1);
+          block.addresses.push(atoi(fileInput.c_str()));
+          inputFile >> fileInput;
+        }
     }
-
-    if(block.burst!=block.addresses.size()){
+    if(block.burst!=block.addresses.size() || (!inputFile.eof() && fileInput.find(PID_FORM)==string::npos)){
       cout << "\tERROR: " << PID_FORM << block.pid << " must have a number of memory addresses equivalent to its burst time [1 address: 1 time unit]\n";
       exit(1);
     }
