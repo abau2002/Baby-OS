@@ -1,3 +1,7 @@
+
+
+
+
 // FILE: babyOS.cpp
 // A Bautista, B Franco, E Mora
 // OS, Fall 2023, Transy U
@@ -164,7 +168,7 @@ int main(int argc, char **argv){
   string CPUFile = "processes.txt";
   for(int i=0;i<processes.size();i++){
     cout << PID_FORM << processes.at(i).pid << " " << processes.at(i).arrival << " " << processes.at(i).burst << " " << processes.at(i).priority << endl;
-    processesFile<< processes.at(i).pid << " "
+    processesFile<< "P_" <<processes.at(i).pid << " "
 		 << processes.at(i).arrival << " "
 		 << processes.at(i).burst << " "
 		 << processes.at(i).priority << endl;
@@ -174,23 +178,35 @@ int main(int argc, char **argv){
       cout << processes.at(i).addresses.front() << endl;
       processes.at(i).addresses.pop();
     }
-    cout << endl;
+    cout << endl <<endl;
   }
   
   processesFile.close();
-  if(schedulerType==FIRST_COME_FIRST_SERVE){
+  
+  if (strcmp(schedulerType, FIRST_COME_FIRST_SERVE) == 0) {
     fcfs.loadProcessesFromFile(CPUFile);
     fcfs.execute();
   }
-  else if(schedulerType==SHORTEST_JOB_FIRST){
-    sjf.loadProcessesFromFile(CPUFile,true);
-    sjf.execute();
-  }
-  else if(schedulerType==PRIORITY){
-    pri.loadProcessesFromFile(CPUFile, true);
-    pri.execute();
-  }
-  
+  else if (strcmp(schedulerType, SHORTEST_JOB_FIRST) == 0) {
+    if (flags[PREEMPTIVE_FLAG]) { 
+      sjf.loadProcessesFromFile(CPUFile, true);
+      sjf.executePremtion();
+    }
+    else{
+      sjf.loadProcessesFromFile(CPUFile, false);
+      sjf.execute();
+    }
+    
+  } else if (strcmp(schedulerType, PRIORITY) == 0) {
+    if (flags[PREEMPTIVE_FLAG]) {
+      pri.loadProcessesFromFile(CPUFile, true);
+      pri.executePremtion();
+    }
+    else {
+      pri.loadProcessesFromFile(CPUFile, false);
+      pri.execute();
+    }
+  } 
   /*else if(schedulerType===ROUND_ROBIN){
     rr.rrSchedule(flags[VERBOSE_FLAG],atoi(quanta.c_str()),pcb);
     }*/
