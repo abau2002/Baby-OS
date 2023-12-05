@@ -6,6 +6,7 @@
 //
 // http://stackoverflow.com/questions/5590381/ddg#5591169
 // https://cplusplus.com/reference/vector/vector/
+//
 // baby os is an implementation of other group's code that implements page replacement algorithms 
 // it also incorporates CPU Scheduling 
 // CPU Scheduling unfortunately was not a great implementation so a lot of the schedulers do not work, or only partially work
@@ -78,36 +79,36 @@ int main(int argc, char **argv){
   // if any repeats are found, then it will gracefully exit
   for(int i=1;i<argc;i++){
     if(!strcmp(argv[i],PAGER_TYPE)){
-      pagerTypeOptions>1 ? repeatIndex=i : pagerTypeOptions++;
+      pagerTypeOptions>=1 ? repeatIndex=i : pagerTypeOptions++;
       strcpy(pagerType,argv[i+1]);
     }
     else if(!strcmp(argv[i],PAGES)){
-      pageOptions>1 ? repeatIndex=i : pageOptions++;
+      pageOptions>=1 ? repeatIndex=i : pageOptions++;
       strcpy(pages,argv[i+1]);
     }
     else if(!strcmp(argv[i],FRAMES)){
-      frameOptions>1 ? repeatIndex=i : frameOptions++;  
+      frameOptions>=1 ? repeatIndex=i : frameOptions++;  
       strcpy(frames,argv[i+1]);             
     }
     else if(!strcmp(argv[i],FRAME_SIZE)){
-      sizeOptions>1 ? repeatIndex=i : sizeOptions++;
+      sizeOptions>=1 ? repeatIndex=i : sizeOptions++;
       strcpy(frameSize,argv[i+1]);            
     }
     else if(!strcmp(argv[i],SCHEDULER_TYPE)){
-      schedulerTypeOptions>1 ? repeatIndex=i : schedulerTypeOptions++;
+      schedulerTypeOptions>=1 ? repeatIndex=i : schedulerTypeOptions++;
       strcpy(schedulerType,argv[i+1]);
     }
     else if(!strcmp(argv[i],PREEMPTIVE)){
-      preemptiveOptions>1 ? repeatIndex=i : preemptiveOptions++;
+      preemptiveOptions>=1 ? repeatIndex=i : preemptiveOptions++;
       flags[PREEMPTIVE_FLAG] = true;
     }
     else if(!strcmp(argv[i],QUANTA)){
-      quantaOptions>1 ? repeatIndex=i : quantaOptions++;     
+      quantaOptions>=1 ? repeatIndex=i : quantaOptions++;     
       strcpy(quanta,argv[i+1]);
       flags[QUANTA_FLAG] = true;              
     }
     else if(!strcmp(argv[i],VERBOSE)){
-      verboseOptions>1 ? repeatIndex=i : verboseOptions++;
+      verboseOptions>=1 ? repeatIndex=i : verboseOptions++;
       flags[VERBOSE_FLAG] = true;
     }
 
@@ -167,18 +168,17 @@ int main(int argc, char **argv){
     }
 
   inputFile.close();
-
-  cout << "\nYay!\n";
+    
   ofstream processesFile("processes.txt");
   int size;
   string CPUFile = "processes.txt";
   for(int i = 0; i < processes.size(); i++) {
-      cout << PID_FORM << processes.at(i).pid << " " << processes.at(i).arrival << " " << processes.at(i).burst << " " << processes.at(i).priority << endl;
+      //cout << PID_FORM << processes.at(i).pid << " " << processes.at(i).arrival << " " << processes.at(i).burst << " " << processes.at(i).priority << endl;
       processesFile << "P_" << processes.at(i).pid << " "
                     << processes.at(i).arrival << " "
                     << processes.at(i).burst << " "
                     << processes.at(i).priority << endl;
-
+/*
       // copy of addresses for print
       queue<int> printQueue = processes.at(i).addresses;
 
@@ -186,11 +186,57 @@ int main(int argc, char **argv){
           cout << printQueue.front() << endl;
           printQueue.pop();
       }
-      cout << endl << endl;
+      cout << endl << endl;*/
   }
   
   processesFile.close();
-
+  
+  // now for scheduler, apparently none of these work :(
+  // FCFS returns erroneous answers. The average wait time is off, but we can not tell why
+  // We ran several test cases and they did not consistently return erroneuous answers 
+  // take this output with a grain of salt
+  cout << "Processes scheduling...\n";
+  if (strcmp(schedulerType, FIRST_COME_FIRST_SERVE) == 0) {
+    fcfs.loadProcessesFromFile(CPUFile);
+    fcfs.execute();
+    cout << "\tPlease be aware average wait does not seem to be correct most of the time\n";
+  }
+    
+    // this scheduler core dumps it will successfully start and partially schedule the processes
+    // however it will core dump eventually even with preemption
+    // we are saving you from a core dump
+  else if (strcmp(schedulerType, SHORTEST_JOB_FIRST) == 0) {
+    if (flags[PREEMPTIVE_FLAG]) { 
+      // sjf.loadProcessesFromFile(CPUFile, true);
+      // sjf.executePremtion();
+      cout << "\tUnfortunately Baby OS will core dump if this preemptive scheduling algortihm is used. Please use\n";
+    }
+    else{
+      //sjf.loadProcessesFromFile(CPUFile, false);
+      //sjf.execute();
+      cout << "\tUnfortunately Baby OS will core dump if this nonpreemptive scheduling algortihm is used.\n";
+    }
+    // this scheduler core dumps it will successfully start and partially schedule the processes
+    // however it will core dump eventually even with preemption
+    // we are saving you from a core dump
+  } else if (strcmp(schedulerType, PRIORITY) == 0) {
+    if (flags[PREEMPTIVE_FLAG]) {
+      // pri.loadProcessesFromFile(CPUFile, true);
+      // pri.executePremtion();
+      cout << "\tUnfortunately Baby OS will core dump if this preemptive scheduling algortihm is used.\n";
+    }
+    else {
+      // pri.loadProcessesFromFile(CPUFile, false);
+      // pri.execute();
+      cout << "\tUnfortunately Baby OS will core dump if this nonpreemptive scheduling algortihm is used.\n";
+    }
+  } 
+   // round robin was entirely commented out in the header, so we couldn't implement
+   else if (strcmp(schedulerType, ROUND_ROBIN) == 0) {
+ 	cout << "\tUnfortunately Baby OS hasn't hit adolescence so we can not do round robin. This will be supported in a future version\n";
+    }
+  
+  cout << "Processes paging...\n";
   // for pager, while for subsequent processes it says that it has a number of page faults, but 
   // it as actually the number of the previous faults plus the faults of itself, ex. P1 faults = 5, P2 faults = 14, P2 itself only had 9 faults.
   if (strcmp(pagerType, FIRST_IN_FIRST_OUT) == 0 ||
@@ -210,42 +256,7 @@ int main(int argc, char **argv){
     }
   }
 
-  // now for scheduler, apparently none of these work :(
-  //FCFS returns errorneouys answers. The average wait time is off, but we can not tell why
-  // We ran several test cases and they did not consistently return erroneuous answers 
-  // take this output with a grain of salt
-  if (strcmp(schedulerType, FIRST_COME_FIRST_SERVE) == 0) {
-    fcfs.loadProcessesFromFile(CPUFile);
-    fcfs.execute();
-  }
-    
-    // this scheduler core dumps it will successfully start and partially schedule the processes
-    // however it will core dump eventually even with preemption
-    // we are saving you from a core dump
-  else if (strcmp(schedulerType, SHORTEST_JOB_FIRST) == 0) {
-    if (flags[PREEMPTIVE_FLAG]) { 
-      sjf.loadProcessesFromFile(CPUFile, true);
-      sjf.executePremtion();
-    }
-    else{
-      sjf.loadProcessesFromFile(CPUFile, false);
-      sjf.execute();
-    }
-
-  } else if (strcmp(schedulerType, PRIORITY) == 0) {
-    if (flags[PREEMPTIVE_FLAG]) {
-      pri.loadProcessesFromFile(CPUFile, true);
-      pri.executePremtion();
-    }
-    else {
-      pri.loadProcessesFromFile(CPUFile, false);
-      pri.execute();
-    }
-  } 
-    
-   else if (strcmp(schedulerType, ROUND_ROBIN) == 0) {
- 	cout << "Unfortunately Baby OS hasn't hit adolescence so we can not do round robin. This will be supported in a future version" << endl;
-    }
+  
   return 0;
 }
 
