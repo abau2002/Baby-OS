@@ -6,6 +6,15 @@
 //
 // http://stackoverflow.com/questions/5590381/ddg#5591169
 // https://cplusplus.com/reference/vector/vector/
+// baby os is an implementation of other group's code that implements page replacement algorithms 
+// it also incorporates CPU Scheduling 
+// CPU Scheduling unfortunately was not a great implementation so a lot of the schedulers do not work, or only partially work
+// CPU scheduler FCFS is the only scheduler that runs fully so it is the only one we allow to run
+// however it does not return an accurate Average wait time
+// Pager implementatiopn is fully functional and page replacements algorithms all work
+// these are FIFO, LRU, Random, and MFU
+// in the command line insert --pagerType --schedulerType --frameSize --pages -- --quanta --fileName
+// only add the ones you will use otherwise defaults are present
 
 #include "FCFS.h"
 #include "pageReplacementSimulator.h"
