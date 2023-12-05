@@ -187,7 +187,7 @@ int main(int argc, char **argv){
   if (strcmp(pagerType, FIRST_IN_FIRST_OUT) == 0 ||
     strcmp(pagerType, LEAST_RECENT_USED) == 0 ||
     strcmp(pagerType, MOST_FREQUENT_USED) == 0 ||
-    strcmp(pagerType, RANDOM) == 0) {
+    strcmp(pagerType, RIGHT_RANDOM) == 0) {
 
     for (int i = 0; i < processes.size(); i++) {
         queue<int> addressQueue = processes[i].addresses;
@@ -332,7 +332,7 @@ int commandErrorCheck(int argc, char** argv){
         }
       }
       else if(!strcmp(argv[i],PAGER_TYPE)){
-        if(strcmp(argv[i+1],FIRST_IN_FIRST_OUT) && strcmp(argv[i+1],LEAST_RECENT_USED) && strcmp(argv[i+1],MOST_FREQUENT_USED) && strcmp(argv[i+1],RANDOM)){
+        if(strcmp(argv[i+1],FIRST_IN_FIRST_OUT) && strcmp(argv[i+1],LEAST_RECENT_USED) && strcmp(argv[i+1],MOST_FREQUENT_USED) && strcmp(argv[i+1],RIGHT_RANDOM)){
           cout << "\tERROR: " << argv[i+1] << " is not a valid pager type {FIFO|LRU|MFU|RANDOM}\n";
           error = true;
         }
