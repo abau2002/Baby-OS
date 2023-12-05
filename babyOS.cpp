@@ -202,10 +202,17 @@ int main(int argc, char **argv){
   }
 
   // now for scheduler, apparently none of these work :(
+  //FCFS returns errorneouys answers. The average wait time is off, but we can not tell why
+  // We ran several test cases and they did not consistently return erroneuous answers 
+  // take this output with a grain of salt
   if (strcmp(schedulerType, FIRST_COME_FIRST_SERVE) == 0) {
     fcfs.loadProcessesFromFile(CPUFile);
     fcfs.execute();
   }
+    
+    // this scheduler core dumps it will successfully start and partially schedule the processes
+    // however it will core dump eventually even with preemption
+    // we are saving you from a core dump
   else if (strcmp(schedulerType, SHORTEST_JOB_FIRST) == 0) {
     if (flags[PREEMPTIVE_FLAG]) { 
       sjf.loadProcessesFromFile(CPUFile, true);
@@ -226,11 +233,10 @@ int main(int argc, char **argv){
       pri.execute();
     }
   } 
-  
-  /*else if(schedulerType===ROUND_ROBIN){
-    rr.rrSchedule(flags[VERBOSE_FLAG],atoi(quanta.c_str()),pcb);
-    }*/
-  
+    
+   else if (strcmp(schedulerType, ROUND_ROBIN) == 0) {
+ 	cout << "Unfortunately Baby OS hasn't hit adolescence so we can not do round robin. This will be supported in a future version" << endl;
+    }
   return 0;
 }
 
