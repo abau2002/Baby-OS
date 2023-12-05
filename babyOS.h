@@ -28,7 +28,7 @@ using namespace std;
 #define FIRST_IN_FIRST_OUT "FIFO"
 #define LEAST_RECENT_USED "LRU"
 #define MOST_FREQUENT_USED "MFU"
-#define RANDOM "RANDOM"
+#define RIGHT_RANDOM "RANDOM"
 
 #define SCHEDULER_TYPE "--schedulerType"
 #define PREEMPTIVE "--preemptive"
