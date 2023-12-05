@@ -138,8 +138,8 @@ int main(int argc, char **argv){
     sameProcess = true;
     inputFile >> fileInput;
     for(int i=0;i<block.burst;i++){
-      if(fileInput.find(PID_FORM)==string::npos) sameProcess=false;
-      if(!inputFile.eof() && !sameProcess){
+      if(fileInput.find(PID_FORM)!=string::npos) sameProcess=false;
+      if(!inputFile.eof() && sameProcess){
         if(addressErrorCheck(block.pid,atoi(frameSize),atoi(pages),fileInput)) exit(1);
         block.addresses.push(atoi(fileInput.c_str()));
         inputFile >> fileInput;
