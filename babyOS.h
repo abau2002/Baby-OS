@@ -2,9 +2,10 @@
 // A Bautista, B Franco, E Mora
 // OS, Fall 2023, Transy U
 //
-//
+//	interface for babyOs that holds the definitions, structures, and function prototypes to error check
+//	for valid command line inputs, set up, and option combinations. Also contains the error checking 
+//	function prototypes needed to ensure proper input file set up and values
 // 
-//
 
 #ifndef BABY_H
 #define BABY_H
@@ -28,7 +29,6 @@ using namespace std;
 #define FIRST_IN_FIRST_OUT "FIFO"
 #define LEAST_RECENT_USED "LRU"
 #define MOST_FREQUENT_USED "MFU"
-#define RIGHT_RANDOM "RANDOM"
 
 #define SCHEDULER_TYPE "--schedulerType"
 #define PREEMPTIVE "--preemptive"
@@ -38,6 +38,7 @@ using namespace std;
 #define SHORTEST_JOB_FIRST "SJF"
 #define PRIORITY "Priority"
 #define ROUND_ROBIN "RR"
+#define RANDOM "Random"
 
 #define DEFAULT_SCHEDULER_TYPE FIRST_COME_FIRST_SERVE
 #define DEFAULT_PAGER_TYPE FIRST_IN_FIRST_OUT
@@ -46,6 +47,8 @@ using namespace std;
 #define DEFAULT_SIZE "512"
 #define DEFAULT_QUANTA "10"
 #define DEFAULT_FILE "final.in"
+
+#define CPU_FILE "processes.txt"
 
 enum{
 	PREEMPTIVE_FLAG,

@@ -2,21 +2,35 @@
 // A Bautista, B Franco, E Mora
 // OS, Fall 2023, Transy U
 //
-// driver for Group 3 babyOS 
+//	driver for babyOS that handles error checking for the command line and input file
+//	if both are valid then it will proceed to attempt to schedule and then page the
+//  in the order of the processes in the input file using the indicated algorithms
 //
 // http://stackoverflow.com/questions/5590381/ddg#5591169
 // https://cplusplus.com/reference/vector/vector/
 //
-// baby os is an implementation of other group's code that implements page replacement algorithms 
-// it also incorporates CPU Scheduling 
-// CPU Scheduling unfortunately was not a great implementation so a lot of the schedulers do not work, or only partially work
-// CPU scheduler FCFS is the only scheduler that runs fully so it is the only one we allow to run
-// however it does not return an accurate Average wait time
-// Pager implementatiopn is fully functional and page replacements algorithms all work
-// these are FIFO, LRU, Random, and MFU
-// in the command line insert --pagerType --schedulerType --frameSize --pages -- --quanta --fileName
-// only add the ones you will use otherwise defaults are present
+//	babyOS is an implementation of the Pager and CPU Scheduler of two different groups in order to simulate
+//	the basic resource management of an OS
+//
+//	To use babyOS	enter at the command line --pagerType, --frames, --framesize, --pages,
+//	--schedulerType, --preemptive, --quanta, and --verbose to specify options, otherwise the defaults will be used
+//
+// The CPU scheduler we recieved would eventually core dump on all algorithms except for FCFS and RR
+// As such we believed it to be safer to comment out those function calls and print out that those schedulers are unsafe
+// RR was fully commented out and so we left 
+// FCFS runs fully without core dumping, however it nearly always returns a wrong answer for average wait time
+// Since FCFS doesn't core dump we decided to leave it in and print out a message that warns that the average wait time may be incorrect
+// We also did not use the CPU Scheduler function putQueue since there were no comments on it,
+// we were unsure of appropiate inputs for its parameters, and its absence seemed to have no affect on the runnability of the scheduler
+// 
+// The pager we recieved was fully operational
+// We did not include symConsts.h in our driver because we wanted all the necessary definitions it needs
+// to be in one place: the header assocaited with the driver. We also changed the option for the random pager
+// to be "Random" instead of "RANDOM" to be in line with how it is defined in symConsts.h so that the random pager
+// would work
+//
 
+//#include "symConsts.h"
 #include "FCFS.h"
 #include "pageReplacementSimulator.h"
 #include "pageTable.h"
@@ -24,7 +38,6 @@
 #include "procManagement.h" 
 #include "RoundRobin.h"
 #include "SJF.h"
-#include "symConsts.h"
 
 #include "babyOS.h"
 #include <iostream>
@@ -120,8 +133,9 @@ int main(int argc, char **argv){
     }
   }
 
-  //makes sure that input numbers and flags are valid, if not we gracefully exit
-  if(inputErrorCheck(pages,frames,frameSize,schedulerType,quanta,flags)) exit(1);
+  // makes sure that input numbers and flags are valid, if not we gracefully exit
+  if(inputErrorCheck(pages,frames,frameSize,schedulerType,quanta,flags)) exit(1);\
+  
   inputFile.open(fileName);
   if(!inputFile){
     cout << "\tERROR: File not opened\n";
@@ -131,7 +145,7 @@ int main(int argc, char **argv){
   PCB block;
   string fileInput,arrival,burst,priority;
   bool sameProcess;
-
+  
   inputFile >> fileInput;
   while(!inputFile.eof()){
     if(idErrorCheck(fileInput)) exit(1);
@@ -148,6 +162,7 @@ int main(int argc, char **argv){
     sameProcess = true;
     inputFile >> fileInput;
     for(int i=0;i<block.burst;i++){
+    	// if a pid is seen when trying to read in addresses, stop pushing to the address queue
       if(fileInput.find(PID_FORM)!=string::npos) sameProcess=false;
       if(!inputFile.eof() && sameProcess){
         if(addressErrorCheck(block.pid,atoi(frameSize),atoi(pages),fileInput)) exit(1);
@@ -160,101 +175,87 @@ int main(int argc, char **argv){
       exit(1);
     }
 
-    queue<int> tempQueue = block.addresses;
-
     processes.push_back(block);
+    // will clear block's queue of addresses to prepare for next process
     while (!block.addresses.empty()) block.addresses.pop();
-        processes.back().addresses = tempQueue;
-    }
-
+  }
   inputFile.close();
-    
-  ofstream processesFile("processes.txt");
-  int size;
-  string CPUFile = "processes.txt";
+  
+  // writes processes to a separate file without their addresses since
+  // the scheduler functions take in a file name and we know the proper 
+  // format of a scheduler file
+  ofstream processesFile(CPU_FILE);
   for(int i = 0; i < processes.size(); i++) {
-      //cout << PID_FORM << processes.at(i).pid << " " << processes.at(i).arrival << " " << processes.at(i).burst << " " << processes.at(i).priority << endl;
       processesFile << "P_" << processes.at(i).pid << " "
                     << processes.at(i).arrival << " "
                     << processes.at(i).burst << " "
                     << processes.at(i).priority << endl;
-/*
-      // copy of addresses for print
-      queue<int> printQueue = processes.at(i).addresses;
-
-      while (!printQueue.empty()) {
-          cout << printQueue.front() << endl;
-          printQueue.pop();
-      }
-      cout << endl << endl;*/
   }
-  
   processesFile.close();
   
-  // now for scheduler, apparently none of these work :(
   // FCFS returns erroneous answers. The average wait time is off, but we can not tell why
   // We ran several test cases and they did not consistently return erroneuous answers 
   // take this output with a grain of salt
   cout << "Processes scheduling...\n";
   if (strcmp(schedulerType, FIRST_COME_FIRST_SERVE) == 0) {
-    fcfs.loadProcessesFromFile(CPUFile);
+    fcfs.loadProcessesFromFile(CPU_FILE);
     fcfs.execute();
     cout << "\tPlease be aware average wait does not seem to be correct most of the time\n";
   }
-    
-    // this scheduler core dumps it will successfully start and partially schedule the processes
-    // however it will core dump eventually even with preemption
-    // we are saving you from a core dump
+  // this scheduler will successfully start and partially schedule the processes
+  // however it will core dump eventually even with preemption
+  // we are saving you from a core dump
   else if (strcmp(schedulerType, SHORTEST_JOB_FIRST) == 0) {
     if (flags[PREEMPTIVE_FLAG]) { 
-      // sjf.loadProcessesFromFile(CPUFile, true);
+      // sjf.loadProcessesFromFile(CPU_FILE, true);
       // sjf.executePremtion();
-      cout << "\tUnfortunately Baby OS will core dump if this preemptive scheduling algortihm is used. Please use\n";
+      cout << "\tUnfortunately Baby OS will core dump if preemptive SJF is used. Please use FCFS.\n";
     }
     else{
-      //sjf.loadProcessesFromFile(CPUFile, false);
+      //sjf.loadProcessesFromFile(CPU_FILE, false);
       //sjf.execute();
-      cout << "\tUnfortunately Baby OS will core dump if this nonpreemptive scheduling algortihm is used.\n";
+      cout << "\tUnfortunately Baby OS will core dump if nonpreemptive SJF is used. Please use FCFS.\n";
     }
-    // this scheduler core dumps it will successfully start and partially schedule the processes
-    // however it will core dump eventually even with preemption
-    // we are saving you from a core dump
-  } else if (strcmp(schedulerType, PRIORITY) == 0) {
+  }
+  // this scheduler core dumps it will successfully start and partially schedule the processes
+  // however it will core dump eventually even with preemption
+  // we are saving you from a core dump
+  else if (strcmp(schedulerType, PRIORITY) == 0) {
     if (flags[PREEMPTIVE_FLAG]) {
-      // pri.loadProcessesFromFile(CPUFile, true);
+      // pri.loadProcessesFromFile(CPU_FILE, true);
       // pri.executePremtion();
-      cout << "\tUnfortunately Baby OS will core dump if this preemptive scheduling algortihm is used.\n";
+      cout << "\tUnfortunately Baby OS will core dump if preemptive Priority is used. Please use FCFS.\n";
     }
     else {
-      // pri.loadProcessesFromFile(CPUFile, false);
+      // pri.loadProcessesFromFile(CPU_FILE, false);
       // pri.execute();
-      cout << "\tUnfortunately Baby OS will core dump if this nonpreemptive scheduling algortihm is used.\n";
+      cout << "\tUnfortunately Baby OS will core dump if nonpreemptive Priority is used. Please use FCFS.\n";
     }
   } 
-   // round robin was entirely commented out in the header, so we couldn't implement
-   else if (strcmp(schedulerType, ROUND_ROBIN) == 0) {
- 	cout << "\tUnfortunately Baby OS hasn't hit adolescence so we can not do round robin. This will be supported in a future version\n";
-    }
+  // round robin was entirely commented out in the header, so we couldn't implement it
+  else if (strcmp(schedulerType, ROUND_ROBIN) == 0) {
+ 		cout << "\tUnfortunately Baby OS does not have RR implemented yet. Please use FCFS.\n";
+  }
   
-  cout << "Processes paging...\n";
-  
-  // for pager, while for multiple processes it says that each has a total number of page faults (suggesting just its own total),
+	// for pager, while for multiple processes it says that each has a total number of page faults (suggesting just its own total),
   // it as actually the running total of the page faults, ex. P1 faults = 5, P2 faults = 14, P2 itself only had 9 faults, 14 is the running total
   // this is likely because the creators of the cpp file dealt with only one process
+  
+  cout << "Processes paging...\n";
   if (strcmp(pagerType, FIRST_IN_FIRST_OUT) == 0 ||
-    strcmp(pagerType, LEAST_RECENT_USED) == 0 ||
+  	strcmp(pagerType, LEAST_RECENT_USED) == 0 ||
     strcmp(pagerType, MOST_FREQUENT_USED) == 0 ||
-    strcmp(pagerType, RIGHT_RANDOM) == 0) {
+    strcmp(pagerType, RANDOM) == 0) {
+    
+    int frameInt = atoi(frames);  
+    int pageInt = atoi(pages);    
+    int frameSizeInt = atoi(frameSize); 
+		string pid;
 
     for (int i = 0; i < processes.size(); i++) {
-        queue<int> addressQueue = processes[i].addresses;
-        string pid = to_string(processes[i].pid);
-        int frameInt = atoi(frames);  
-        int pageInt = atoi(pages);    
-        int frameSizeInt = atoi(frameSize); 
-
-        PageTable pageTable(pageInt); 
-        pageSimulator.simulation(addressQueue, pid, pageTable, frameInt, pageInt, frameSizeInt, flags[VERBOSE_FLAG], pagerType);
+	    PageTable pageTable(pageInt);
+      pid = to_string(processes[i].pid);   
+      pageSimulator.simulation(processes[i].addresses, pid, pageTable, frameInt, pageInt, frameSizeInt, flags[VERBOSE_FLAG], pagerType);
     }
   }
 
@@ -360,8 +361,8 @@ int commandErrorCheck(int argc, char** argv){
         }
       }
       else if(!strcmp(argv[i],PAGER_TYPE)){
-        if(strcmp(argv[i+1],FIRST_IN_FIRST_OUT) && strcmp(argv[i+1],LEAST_RECENT_USED) && strcmp(argv[i+1],MOST_FREQUENT_USED) && strcmp(argv[i+1],RIGHT_RANDOM)){
-          cout << "\tERROR: " << argv[i+1] << " is not a valid pager type {FIFO|LRU|MFU|RANDOM}\n";
+        if(strcmp(argv[i+1],FIRST_IN_FIRST_OUT) && strcmp(argv[i+1],LEAST_RECENT_USED) && strcmp(argv[i+1],MOST_FREQUENT_USED) && strcmp(argv[i+1],RANDOM)){
+          cout << "\tERROR: " << argv[i+1] << " is not a valid pager type {FIFO|LRU|MFU|Random}\n";
           error = true;
         }
       }
