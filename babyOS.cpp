@@ -237,8 +237,10 @@ int main(int argc, char **argv){
     }
   
   cout << "Processes paging...\n";
-  // for pager, while for subsequent processes it says that it has a number of page faults, but 
-  // it as actually the number of the previous faults plus the faults of itself, ex. P1 faults = 5, P2 faults = 14, P2 itself only had 9 faults.
+  
+  // for pager, while for multiple processes it says that each has a total number of page faults (suggesting just its own total),
+  // it as actually the running total of the page faults, ex. P1 faults = 5, P2 faults = 14, P2 itself only had 9 faults, 14 is the running total
+  // this is likely because the creators of the cpp file dealt with only one process
   if (strcmp(pagerType, FIRST_IN_FIRST_OUT) == 0 ||
     strcmp(pagerType, LEAST_RECENT_USED) == 0 ||
     strcmp(pagerType, MOST_FREQUENT_USED) == 0 ||
