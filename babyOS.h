@@ -67,7 +67,7 @@ struct PCB{
 // returns false if no error were found
 bool addressErrorCheck(int pid,int pageSize, int pages, string address);
 
-// checks if arrival, burst, and priority are non-negative integers and if priority is 0-100
+// checks if arrival, burst, and priority are non-negative integers and if priority is between MIN_PRIORITY and MAX_PRIORITY inclusive
 // the pid is taken in to print the pid where the error was found
 // returns false if no error were found
 bool loadErrorCheck(int pid, string arrival, string burst, string priority);

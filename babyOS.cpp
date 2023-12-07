@@ -3,31 +3,48 @@
 // OS, Fall 2023, Transy U
 //
 //	driver for babyOS that handles error checking for the command line and input file
-//	if both are valid then it will proceed to attempt to schedule and then page the
-//  in the order of the processes in the input file using the indicated algorithms
+//		if both are valid then it will proceed to attempt to schedule and then page the processes
+//  	in the order that they appear in the input file using the indicated algorithms
 //
 // http://stackoverflow.com/questions/5590381/ddg#5591169
 // https://cplusplus.com/reference/vector/vector/
 //
-//	babyOS is an implementation of the Pager and CPU Scheduler of two different groups in order to simulate
-//	the basic resource management of an OS
+//	babyOS is an implementation of the G5Pager and G4CPU in order to simulate
+//		the basic resource management of an OS
 //
-//	To use babyOS	enter at the command line --pagerType, --frames, --framesize, --pages,
-//	--schedulerType, --preemptive, --quanta, and --verbose to specify options, otherwise the defaults will be used
+//	To use babyOS	enter at the command line --pagerType {pagerType}, --frames #, --framesize #, --pages #,
+//		--schedulerType {schedulerType}, --preemptive, --quanta #, and --verbose to specify options, otherwise the defaults will be used
+//		to specify an input file, type the file name as the last argument, otherwise the default will be used
+//	ex. ./babyOS --schedulerType SJF --pagerType LRU --preemptive --pages 10 --verbose file.txt
+//	Defaults: schedulerType - FCFS, pagerType - FIFO, frames - 3, pages - 8, framesize - 512, quanta - 10, 
+//		preemptive - false, verbose - false, file - final.in
 //
 // The CPU scheduler we recieved would eventually core dump on all algorithms except for FCFS and RR
-// As such we believed it to be safer to comment out those function calls and print out that those schedulers are unsafe
-// RR was fully commented out and so we left 
+// 	as such we believed it to be safer to comment out those function calls and print out that those schedulers are unsafe
+// RR was fully commented out and so we print out a statement saying that it has yet to be implemented 
 // FCFS runs fully without core dumping, however it nearly always returns a wrong answer for average wait time
-// Since FCFS doesn't core dump we decided to leave it in and print out a message that warns that the average wait time may be incorrect
+// 	Since FCFS doesn't core dump we decided to leave it in and print out a message that warns that the average wait time may be incorrect
+// 	Also to use FCFS, since it takes in a file name, we had to write the processes without their addresses to a new file and pass it in
+// 	Thankfully, we know the formatting of a file for the CPU scheduler 
 // We also did not use the CPU Scheduler function putQueue since there were no comments on it,
-// we were unsure of appropiate inputs for its parameters, and its absence seemed to have no affect on the runnability of the scheduler
+// 	we were unsure of appropiate inputs for its parameters, and its absence seemed to have no affect on the runnability of the scheduler
 // 
 // The pager we recieved was fully operational
 // We did not include symConsts.h in our driver because we wanted all the necessary definitions it needs
-// to be in one place: the header assocaited with the driver. We also changed the option for the random pager
-// to be "Random" instead of "RANDOM" to be in line with how it is defined in symConsts.h so that the random pager
-// would work
+// 	to be in one place: the header assocaited with the driver
+// We also changed the option for the random pagerType
+// 	to be "Random" instead of "RANDOM" to be in line with how it is defined in symConsts.h so that the random pager
+// 	would work
+// We decided that in our for loop that calls the pager function that we would have PageTable and PageReplacementSimulator
+//	be redeclared with each iteration of the loop in order to reset pageFaultCount and the pageTable for the next process.
+//	If we don't redeclare the PageTable then the pager will core dump with multiple processes and if we don't redeclare
+//	PageReplacementSimulator then each processes's total will actually be a running total
+//	ex. P1 faults = 5, P2 faults = 14, P2 itself only had 9 faults, 14 is the running total
+//	we think this is likely because the creators of the pager dealt with only one process and so felt no need
+//	to reset the pageTable or the pagefaultCount
+// We think it'd be better to have the individual totals be correct with no running total than incorrect with a running total 
+// 	and so we also print out a message to add all the individual totals to get the cumulative total of page faults as we cannot
+//	access pageFaultCount since it is a private variable
 //
 
 //#include "symConsts.h"
@@ -56,10 +73,9 @@ int main(int argc, char **argv){
   queue<PCB>  addressQueue;
   int fileIndex;
   ifstream inputFile;
-  Priority pri;
   FCFS fcfs;
-  SJF sjf;
-  PageReplacementSimulator pageSimulator;
+  //Priority pri;
+  //SJF sjf;
   
   // ensures a default is present in case a value is not specified
   strcpy(pagerType,DEFAULT_PAGER_TYPE);
@@ -124,7 +140,6 @@ int main(int argc, char **argv){
       verboseOptions>=1 ? repeatIndex=i : verboseOptions++;
       flags[VERBOSE_FLAG] = true;
     }
-
     // if a repeat is found, its index will be saved
     // since repeatIndex will change from 0, it will evaluate as true
     if(repeatIndex){
@@ -134,7 +149,7 @@ int main(int argc, char **argv){
   }
 
   // makes sure that input numbers and flags are valid, if not we gracefully exit
-  if(inputErrorCheck(pages,frames,frameSize,schedulerType,quanta,flags)) exit(1);\
+  if(inputErrorCheck(pages,frames,frameSize,schedulerType,quanta,flags)) exit(1);
   
   inputFile.open(fileName);
   if(!inputFile){
@@ -181,9 +196,7 @@ int main(int argc, char **argv){
   }
   inputFile.close();
   
-  // writes processes to a separate file without their addresses since
-  // the scheduler functions take in a file name and we know the proper 
-  // format of a scheduler file
+  // writes processes to a separate file without their addresses
   ofstream processesFile(CPU_FILE);
   for(int i = 0; i < processes.size(); i++) {
       processesFile << "P_" << processes.at(i).pid << " "
@@ -193,18 +206,15 @@ int main(int argc, char **argv){
   }
   processesFile.close();
   
-  // FCFS returns erroneous answers. The average wait time is off, but we can not tell why
-  // We ran several test cases and they did not consistently return erroneuous answers 
-  // take this output with a grain of salt
-  cout << "Processes scheduling...\n";
+  // FCFS gives erroneous answers
+  cout << "\nProcesses scheduling...\n\n";
   if (strcmp(schedulerType, FIRST_COME_FIRST_SERVE) == 0) {
     fcfs.loadProcessesFromFile(CPU_FILE);
     fcfs.execute();
     cout << "\tPlease be aware average wait does not seem to be correct most of the time\n";
+    cout << "Scheduling successful!\n";
   }
-  // this scheduler will successfully start and partially schedule the processes
-  // however it will core dump eventually even with preemption
-  // we are saving you from a core dump
+  // will run partially and then core dump, so we commented it out
   else if (strcmp(schedulerType, SHORTEST_JOB_FIRST) == 0) {
     if (flags[PREEMPTIVE_FLAG]) { 
       // sjf.loadProcessesFromFile(CPU_FILE, true);
@@ -216,10 +226,9 @@ int main(int argc, char **argv){
       //sjf.execute();
       cout << "\tUnfortunately Baby OS will core dump if nonpreemptive SJF is used. Please use FCFS.\n";
     }
+    cout << "Scheduling failed.\n";
   }
-  // this scheduler core dumps it will successfully start and partially schedule the processes
-  // however it will core dump eventually even with preemption
-  // we are saving you from a core dump
+  // will run partially and then core dump, so we commented it out
   else if (strcmp(schedulerType, PRIORITY) == 0) {
     if (flags[PREEMPTIVE_FLAG]) {
       // pri.loadProcessesFromFile(CPU_FILE, true);
@@ -231,15 +240,13 @@ int main(int argc, char **argv){
       // pri.execute();
       cout << "\tUnfortunately Baby OS will core dump if nonpreemptive Priority is used. Please use FCFS.\n";
     }
+        cout << "Scheduling failed.\n";
   } 
   // round robin was entirely commented out in the header, so we couldn't implement it
   else if (strcmp(schedulerType, ROUND_ROBIN) == 0) {
  		cout << "\tUnfortunately Baby OS does not have RR implemented yet. Please use FCFS.\n";
+ 		cout << "Scheduling failed.\n";
   }
-  
-	// for pager, while for multiple processes it says that each has a total number of page faults (suggesting just its own total),
-  // it as actually the running total of the page faults, ex. P1 faults = 5, P2 faults = 14, P2 itself only had 9 faults, 14 is the running total
-  // this is likely because the creators of the cpp file dealt with only one process
   
   cout << "Processes paging...\n";
   if (strcmp(pagerType, FIRST_IN_FIRST_OUT) == 0 ||
@@ -251,15 +258,16 @@ int main(int argc, char **argv){
     int pageInt = atoi(pages);    
     int frameSizeInt = atoi(frameSize); 
 		string pid;
-
     for (int i = 0; i < processes.size(); i++) {
+    	// redeclare the PageTable and PageReplacementSimulator in order to reset pageFaultCount and the pagetable for the next process 
+      PageReplacementSimulator pageSimulator;
 	    PageTable pageTable(pageInt);
       pid = to_string(processes[i].pid);   
       pageSimulator.simulation(processes[i].addresses, pid, pageTable, frameInt, pageInt, frameSizeInt, flags[VERBOSE_FLAG], pagerType);
     }
+    cout << "\n\tPlease be aware these are the individual total page faults.\n\tIn order to get the cumulative total, sum all the totals seen above.\n";
+    cout << "Paging successful!\n\n";
   }
-
-  
   return 0;
 }
 
