@@ -305,7 +305,8 @@ bool loadErrorCheck(int pid, string arrival, string burst, string priority){
 bool integerCheck(string integerString){
   int integer = atoi(integerString.c_str());
   string comparisonString, zeros = "";
-  
+
+	// makes a string of the prepended zeros and stops once a non-zero character is found
   for(int i=0;i<integerString.length();i++){
   	if(integerString[i]=='0'){
   		zeros += integerString[i];
@@ -314,7 +315,11 @@ bool integerCheck(string integerString){
   		i=integerString.length();
   	}
   }
+
+	// adds the zeros in front of the converted integer to account for any integers with prepended zeros
   comparisonString = zeros + to_string(integer);
+	// if the integerString is a positive integer prepended with zero(s) or not, it will be accepted
+	// if the integerString is just a bunch of zeros then it will also be accepted
   if(!strcmp(zeros.c_str(),integerString.c_str()) || !strcmp(comparisonString.c_str(),integerString.c_str())) return true;
   return false;
 }
