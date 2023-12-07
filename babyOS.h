@@ -48,7 +48,7 @@ using namespace std;
 #define DEFAULT_QUANTA "10"
 #define DEFAULT_FILE "final.in"
 
-#define CPU_FILE "processes.txt"
+#define CPU_FILE "FCFS_CPU_FILE"
 
 enum{
 	PREEMPTIVE_FLAG,
@@ -77,7 +77,7 @@ bool loadErrorCheck(int pid, string arrival, string burst, string priority);
 bool integerCheck(string integerString);
 
 // ensures that entered input options don't conflict
-// checks if pages, frames, frameSize, and quanta are posotive integers
+// checks if pages, frames, frameSize, and quanta are positive integers
 // frameSize at most can be MAX_FRAMES
 // returns false if no error were found
 bool inputErrorCheck(string pages, string frames, string frameSize, string schedulerType, string quanta, bool *flags);

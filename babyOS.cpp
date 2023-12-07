@@ -20,18 +20,25 @@
 //		preemptive - false, verbose - false, file - final.in
 //
 // The CPU scheduler we recieved would eventually core dump on all algorithms except for FCFS and RR
-// 	as such we believed it to be safer to comment out those function calls and print out that those schedulers are unsafe
+// 	as such we believed it to be safer to comment out those function calls and print out that those schedulers are unsafe and that FCFS should be used
 // RR was fully commented out and so we print out a statement saying that it has yet to be implemented 
 // FCFS runs fully without core dumping, however it nearly always returns a wrong answer for average wait time
 // 	Since FCFS doesn't core dump we decided to leave it in and print out a message that warns that the average wait time may be incorrect
 // 	Also to use FCFS, since it takes in a file name, we had to write the processes without their addresses to a new file and pass it in
-// 	Thankfully, we know the formatting of a file for the CPU scheduler 
-// We also did not use the CPU Scheduler function putQueue since there were no comments on it,
-// 	we were unsure of appropiate inputs for its parameters, and its absence seemed to have no affect on the runnability of the scheduler
+// 	Thankfully, we knew the formatting of a file for the CPU scheduler since we worked on one as well
+//	With this solution, we have to have an additional error check for if the specified file at the command line matches the one defined by CPU_FILE
+//	If it does, we print out a message that that file name is reserved for the babyOS's G4CPU
+// For SJF and Priority we did not intend on using the CPU Scheduler function putQueue since there were no comments on it
+//  and its absence seemed to have no effect on the runnability of the scheduler, with or without the function it core dumps
+//	When we tested it, we figured that the count could be the number of processes since it'd print out a process block as many times as the count
+//	Even passing in a count with this in mind, it did not prevent a core dump
+// We cannot have the pager page the processes in the order they were scheduled because only one scheduler works and for the one that does
+//	work there is no way we can access the scheduled process order. Additionally, we believed it would go against the idea of trying to integrate
+//	G4CPU as we'd be writing our own scheduler and doing their job for them
 // 
 // The pager we recieved was fully operational
-// We did not include symConsts.h in our driver because we wanted all the necessary definitions it needs
-// 	to be in one place: the header assocaited with the driver
+// We did not include symConsts.h in our driver because we wanted all the definitions that it needs
+// 	to be in one place: the header associated with the driver
 // We also changed the option for the random pagerType
 // 	to be "Random" instead of "RANDOM" to be in line with how it is defined in symConsts.h so that the random pager
 // 	would work
@@ -45,8 +52,9 @@
 // We think it'd be better to have the individual totals be correct with no running total than incorrect with a running total 
 // 	and so we also print out a message to add all the individual totals to get the cumulative total of page faults as we cannot
 //	access pageFaultCount since it is a private variable
+// We didn't use updateFreeFrame or updateVictimFrame because it was clear that they were meant for use by the pager itself and not to be
+//	called explicitly by the driver
 //
-
 
 //#include "symConsts.h"
 #include "FCFS.h"
@@ -75,8 +83,8 @@ int main(int argc, char **argv){
   int fileIndex;
   ifstream inputFile;
   FCFS fcfs;
-  //Priority pri;
-  //SJF sjf;
+  // Priority pri;
+  // SJF sjf;
   
   // ensures a default is present in case a value is not specified
   strcpy(pagerType,DEFAULT_PAGER_TYPE);
@@ -98,6 +106,10 @@ int main(int argc, char **argv){
   }
   else if(fileIndex){
     strcpy(fileName,argv[fileIndex]);
+  }
+  if(!strcmp(fileName,CPU_FILE)){
+  	cout << "\tApologies, this file name is reserved for babyOS's CPU Scheduler. Please use a different one.\n";
+  	exit(1);
   }
   
   // counts of how many times each option is entered and index of a repeat
@@ -212,31 +224,35 @@ int main(int argc, char **argv){
   if (strcmp(schedulerType, FIRST_COME_FIRST_SERVE) == 0) {
     fcfs.loadProcessesFromFile(CPU_FILE);
     fcfs.execute();
-    cout << "\tPlease be aware average wait does not seem to be correct most of the time\n";
+    cout << "\tPlease be aware average wait does not seem to be correct most of the time.\n";
     cout << "Scheduling successful!\n";
   }
-  // will run partially and then core dump, so we commented it out
+  // this will run partially and then core dump, so we commented it out
   else if (strcmp(schedulerType, SHORTEST_JOB_FIRST) == 0) {
-    if (flags[PREEMPTIVE_FLAG]) { 
+    if (flags[PREEMPTIVE_FLAG]) {
+    	// sjf.putQueue(CPU_FILE,4,true);
       // sjf.loadProcessesFromFile(CPU_FILE, true);
       // sjf.executePremtion();
       cout << "\tUnfortunately Baby OS will core dump if preemptive SJF is used. Please use FCFS.\n";
     }
     else{
-      //sjf.loadProcessesFromFile(CPU_FILE, false);
-      //sjf.execute();
+    	// sjf.putQueue(CPU_FILE,4,false);
+      // sjf.loadProcessesFromFile(CPU_FILE, false);
+      // sjf.execute();
       cout << "\tUnfortunately Baby OS will core dump if nonpreemptive SJF is used. Please use FCFS.\n";
     }
     cout << "Scheduling failed.\n";
   }
-  // will run partially and then core dump, so we commented it out
+  // this will run partially and then core dump, so we commented it out
   else if (strcmp(schedulerType, PRIORITY) == 0) {
     if (flags[PREEMPTIVE_FLAG]) {
+    	// pri.putQueue(CPU_FILE,4,true);
       // pri.loadProcessesFromFile(CPU_FILE, true);
       // pri.executePremtion();
       cout << "\tUnfortunately Baby OS will core dump if preemptive Priority is used. Please use FCFS.\n";
     }
     else {
+    	// pri.putQueue(CPU_FILE,4,false);
       // pri.loadProcessesFromFile(CPU_FILE, false);
       // pri.execute();
       cout << "\tUnfortunately Baby OS will core dump if nonpreemptive Priority is used. Please use FCFS.\n";
@@ -305,8 +321,8 @@ bool loadErrorCheck(int pid, string arrival, string burst, string priority){
 bool integerCheck(string integerString){
   int integer = atoi(integerString.c_str());
   string comparisonString, zeros = "";
-
-	// makes a string of the prepended zeros and stops once a non-zero character is found
+  
+  // makes a string of the prepended zeros and stops once a non-zero character is found
   for(int i=0;i<integerString.length();i++){
   	if(integerString[i]=='0'){
   		zeros += integerString[i];
@@ -315,11 +331,10 @@ bool integerCheck(string integerString){
   		i=integerString.length();
   	}
   }
-
 	// adds the zeros in front of the converted integer to account for any integers with prepended zeros
   comparisonString = zeros + to_string(integer);
 	// if the integerString is a positive integer prepended with zero(s) or not, it will be accepted
-	// if the integerString is just a bunch of zeros then it will also be accepted
+	// OR if the integerString is just a bunch of zeros then it will also be accepted
   if(!strcmp(zeros.c_str(),integerString.c_str()) || !strcmp(comparisonString.c_str(),integerString.c_str())) return true;
   return false;
 }
