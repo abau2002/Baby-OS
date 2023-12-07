@@ -73,6 +73,7 @@ bool addressErrorCheck(int pid,int pageSize, int pages, string address);
 bool loadErrorCheck(int pid, string arrival, string burst, string priority);
 
 // checks if the given integerString is indeed an integer, returns true if it is an integer
+// integerCheck allows for prepended zeros
 bool integerCheck(string integerString);
 
 // ensures that entered input options don't conflict
