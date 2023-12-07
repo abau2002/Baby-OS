@@ -303,7 +303,17 @@ bool loadErrorCheck(int pid, string arrival, string burst, string priority){
 
 bool integerCheck(string integerString){
   int integer = atoi(integerString.c_str());
-  if(!strcmp(to_string(integer).c_str(),integerString.c_str())) return true;
+  string comparisonString, zeros = "";
+  for(int i=0;i<integerString.length();i++){
+  	if(integerString[i]=='0'){
+  		zeros += integerString[i];
+  	}
+  	else{
+  		i=integerString.length();
+  	}
+  }
+  comparisonString = zeros + to_string(integer);
+  if(!strcmp(comparisonString.c_str(),integerString.c_str())) return true;
   return false;
 }
 
