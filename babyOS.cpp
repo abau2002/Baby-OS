@@ -47,6 +47,7 @@
 //	access pageFaultCount since it is a private variable
 //
 
+
 //#include "symConsts.h"
 #include "FCFS.h"
 #include "pageReplacementSimulator.h"
@@ -304,6 +305,7 @@ bool loadErrorCheck(int pid, string arrival, string burst, string priority){
 bool integerCheck(string integerString){
   int integer = atoi(integerString.c_str());
   string comparisonString, zeros = "";
+  
   for(int i=0;i<integerString.length();i++){
   	if(integerString[i]=='0'){
   		zeros += integerString[i];
@@ -313,7 +315,7 @@ bool integerCheck(string integerString){
   	}
   }
   comparisonString = zeros + to_string(integer);
-  if(!strcmp(comparisonString.c_str(),integerString.c_str())) return true;
+  if(!strcmp(zeros.c_str(),integerString.c_str()) || !strcmp(comparisonString.c_str(),integerString.c_str())) return true;
   return false;
 }
 
@@ -401,11 +403,11 @@ int commandErrorCheck(int argc, char** argv){
 bool idErrorCheck(string fileInput){
   bool error = false;
   if(fileInput.find(PID_FORM) != 0 || fileInput.length() < 3){
-    cout << "\tERROR: Process id is not of form " << PID_FORM << "#\n";
+    cout << "\tERROR: Process id " << fileInput << " is not of form " << PID_FORM << "#\n";
     error = true;
   }
   else if(!integerCheck(fileInput.substr(2,fileInput.length()).c_str()) || atoi(fileInput.substr(2,fileInput.length()).c_str()) < 0){
-    cout << "\tERROR: Process id must be a non-negative integer\n";
+    cout << "\tERROR: Process id " << fileInput << " must be a non-negative integer\n";
     error = true;
   }
   return error;
