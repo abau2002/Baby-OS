@@ -29,12 +29,13 @@
 //	With this solution, we have to have an additional error check for if the specified file at the command line matches the one defined by CPU_FILE
 //	If it does, we print out a message that that file name is reserved for the babyOS's G4CPU
 // For SJF and Priority we did not intend on using the CPU Scheduler function putQueue since there were no comments on it
-//  and its absence seemed to have no effect on the runnability of the scheduler, with or without the function it core dumps
+// 	and its absence seemed to have no effect on the runnability of the scheduler, with or without the function it core dumps
 //	When we tested it, we figured that the count could be the number of processes since it'd print out a process block as many times as the count
 //	Even passing in a count with this in mind, it did not prevent a core dump
 // We cannot have the pager page the processes in the order they were scheduled because only one scheduler works and for the one that does
 //	work there is no way we can access the scheduled process order. Additionally, we believed it would go against the idea of trying to integrate
 //	G4CPU as we'd be writing our own scheduler and doing their job for them
+// FCFS does not have a verbose output so we print out a message saying that it doesn't when a verbose FCFS is specified
 // 
 // The pager we recieved was fully operational
 // We did not include symConsts.h in our driver because we wanted all the definitions that it needs
@@ -102,10 +103,10 @@ int main(int argc, char **argv){
   // otherwise the file has been specified and will be used
   fileIndex = commandErrorCheck(argc, argv);
   if(fileIndex == -1){
-    exit(1);
+  	exit(1);
   }
   else if(fileIndex){
-    strcpy(fileName,argv[fileIndex]);
+  	strcpy(fileName,argv[fileIndex]);
   }
   if(!strcmp(fileName,CPU_FILE)){
   	cout << "\tApologies, this file name is reserved for babyOS's CPU Scheduler. Please use a different one.\n";
@@ -225,12 +226,13 @@ int main(int argc, char **argv){
     fcfs.loadProcessesFromFile(CPU_FILE);
     fcfs.execute();
     cout << "\tPlease be aware average wait does not seem to be correct most of the time.\n";
+    if(flags[VERBOSE_FLAG]) cout  << "\tSorry, but FCFS does not have a functioning verbose.\n";
     cout << "Scheduling successful!\n";
   }
   // this will run partially and then core dump, so we commented it out
   else if (strcmp(schedulerType, SHORTEST_JOB_FIRST) == 0) {
     if (flags[PREEMPTIVE_FLAG]) {
-    	// sjf.putQueue(CPU_FILE,4,true);
+	// sjf.putQueue(CPU_FILE,4,true);
       // sjf.loadProcessesFromFile(CPU_FILE, true);
       // sjf.executePremtion();
       cout << "\tUnfortunately Baby OS will core dump if preemptive SJF is used. Please use FCFS.\n";
@@ -283,6 +285,7 @@ int main(int argc, char **argv){
       pageSimulator.simulation(processes[i].addresses, pid, pageTable, frameInt, pageInt, frameSizeInt, flags[VERBOSE_FLAG], pagerType);
     }
     cout << "\n\tPlease be aware these are the individual total page faults.\n\tIn order to get the cumulative total, sum all the totals seen above.\n";
+    cout << "\n\tPlease also note that processes are paged in the order in which they appear in \"" << fileName << "\"\n";
     cout << "Paging successful!\n\n";
   }
   return 0;
