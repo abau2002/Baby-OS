@@ -56,6 +56,7 @@
 // We didn't use updateFreeFrame or updateVictimFrame because it was clear that they were meant for use by the pager itself and not to be
 //	called explicitly by the driver
 //
+// The files our group specifically made were: babyOS.cpp, babyOS.h, and the makefile. All others were made by the other two groups.
 
 //#include "symConsts.h"
 #include "FCFS.h"
@@ -284,8 +285,7 @@ int main(int argc, char **argv){
       pid = to_string(processes[i].pid);   
       pageSimulator.simulation(processes[i].addresses, pid, pageTable, frameInt, pageInt, frameSizeInt, flags[VERBOSE_FLAG], pagerType);
     }
-    cout << "\n\tPlease be aware these are the individual total page faults.\n\tIn order to get the cumulative total, sum all the totals seen above.\n";
-    cout << "\n\tPlease also note that processes are paged in the order in which they appear in \"" << fileName << "\"\n";
+    cout << "\n\tPlease note that processes are paged in the order in which they appear in \"" << fileName << "\"\n";
     cout << "Paging successful!\n\n";
   }
   return 0;
