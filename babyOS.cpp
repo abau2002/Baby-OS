@@ -50,8 +50,7 @@
 //	we think this is likely because the creators of the pager dealt with only one process and so felt no need
 //	to reset the pageTable or the pagefaultCount
 // We think it'd be better to have the individual totals be correct with no running total than incorrect with a running total 
-// 	and so we also print out a message to add all the individual totals to get the cumulative total of page faults as we cannot
-//	access pageFaultCount since it is a private variable
+// We can't get the cumulative total of page faults as we cannot access pageFaultCount since it is a private variable
 // We didn't use updateFreeFrame or updateVictimFrame because it was clear that they were meant for use by the pager itself and not to be
 //	called explicitly by the driver
 //
