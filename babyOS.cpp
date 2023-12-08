@@ -35,7 +35,6 @@
 // We cannot have the pager page the processes in the order they were scheduled because only one scheduler works and for the one that does
 //	work there is no way we can access the scheduled process order. Additionally, we believed it would go against the idea of trying to integrate
 //	G4CPU as we'd be writing our own scheduler and doing their job for them
-// FCFS does not have a verbose output so we print out a message saying that it doesn't when a verbose FCFS is specified
 // 
 // The pager we recieved was fully operational
 // We did not include symConsts.h in our driver because we wanted all the definitions that it needs
@@ -57,6 +56,7 @@
 //	called explicitly by the driver
 //
 // The files our group specifically made were: babyOS.cpp, babyOS.h, and the makefile. All others were made by the other two groups.
+//
 
 //#include "symConsts.h"
 #include "FCFS.h"
@@ -225,9 +225,8 @@ int main(int argc, char **argv){
   cout << "\nProcesses scheduling...\n\n";
   if (strcmp(schedulerType, FIRST_COME_FIRST_SERVE) == 0) {
     fcfs.loadProcessesFromFile(CPU_FILE);
-    fcfs.execute();
+    fcfs.execute(flags[VERBOSE_FLAG]);
     cout << "\tPlease be aware average wait does not seem to be correct most of the time.\n";
-    if(flags[VERBOSE_FLAG]) cout  << "\tSorry, but FCFS does not have a functioning verbose.\n";
     cout << "Scheduling successful!\n";
   }
   // this will run partially and then core dump, so we commented it out
