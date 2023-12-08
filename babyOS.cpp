@@ -39,9 +39,8 @@
 // The pager we recieved was fully operational
 // We did not include symConsts.h in our driver because we wanted all the definitions that it needs
 // 	to be in one place: the header associated with the driver
-// We also changed the option for the random pagerType
-// 	to be "Random" instead of "RANDOM" to be in line with how it is defined in symConsts.h so that the random pager
-// 	would work
+// We also changed the option for the random pagerType to be "Random" instead of "RANDOM" to be in line with how it is defined
+//	in symConsts.h so that the random pager would work
 // We decided that in our for loop that calls the pager function that we would have PageTable and PageReplacementSimulator
 //	be redeclared with each iteration of the loop in order to reset pageFaultCount and the pageTable for the next process.
 //	If we don't redeclare the PageTable then the pager will core dump with multiple processes and if we don't redeclare
@@ -103,21 +102,21 @@ int main(int argc, char **argv){
   // otherwise the file has been specified and will be used
   fileIndex = commandErrorCheck(argc, argv);
   if(fileIndex == -1){
-  	exit(1);
+    exit(1);
   }
   else if(fileIndex){
-  	strcpy(fileName,argv[fileIndex]);
+    strcpy(fileName,argv[fileIndex]);
   }
   if(!strcmp(fileName,CPU_FILE)){
-  	cout << "\tApologies, this file name is reserved for babyOS's CPU Scheduler. Please use a different one.\n";
-  	exit(1);
+    cout << "\tApologies, this file name is reserved for babyOS's CPU Scheduler. Please use a different one.\n";
+    exit(1);
   }
   
   // counts of how many times each option is entered and index of a repeat
   int repeatIndex = 0;
   int pagerTypeOptions=0,pageOptions=0,frameOptions=0,sizeOptions=0;
   int schedulerTypeOptions=0,preemptiveOptions=0,quantaOptions=0,verboseOptions=0;
-
+  
   // stores the value of each specified argument so that it can be used in page replacement and cpu scheduling
   // if any repeats are found, then it will gracefully exit
   for(int i=1;i<argc;i++){
@@ -161,7 +160,7 @@ int main(int argc, char **argv){
       exit(1);
     }
   }
-
+  
   // makes sure that input numbers and flags are valid, if not we gracefully exit
   if(inputErrorCheck(pages,frames,frameSize,schedulerType,quanta,flags)) exit(1);
   
@@ -170,7 +169,7 @@ int main(int argc, char **argv){
     cout << "\tERROR: File not opened\n";
     exit(1);
   }
-
+  
   PCB block;
   string fileInput,arrival,burst,priority;
   bool sameProcess;
@@ -179,7 +178,7 @@ int main(int argc, char **argv){
   while(!inputFile.eof()){
     if(idErrorCheck(fileInput)) exit(1);
     block.pid = atoi(fileInput.substr(2,fileInput.length()).c_str());
-
+    
     inputFile >> arrival;
     inputFile >> burst;
     inputFile >> priority;
@@ -191,7 +190,7 @@ int main(int argc, char **argv){
     sameProcess = true;
     inputFile >> fileInput;
     for(int i=0;i<block.burst;i++){
-    	// if a pid is seen when trying to read in addresses, stop pushing to the address queue
+      // if a pid is seen when trying to read in addresses, stop pushing to the address queue
       if(fileInput.find(PID_FORM)!=string::npos) sameProcess=false;
       if(!inputFile.eof() && sameProcess){
         if(addressErrorCheck(block.pid,atoi(frameSize),atoi(pages),fileInput)) exit(1);
@@ -203,7 +202,7 @@ int main(int argc, char **argv){
       cout << "\tERROR: " << PID_FORM << block.pid << " must have a number of memory addresses equivalent to its burst time [1 address: 1 time unit]\n";
       exit(1);
     }
-
+    
     processes.push_back(block);
     // will clear block's queue of addresses to prepare for next process
     while (!block.addresses.empty()) block.addresses.pop();
@@ -213,10 +212,10 @@ int main(int argc, char **argv){
   // writes processes to a separate file without their addresses
   ofstream processesFile(CPU_FILE);
   for(int i = 0; i < processes.size(); i++) {
-      processesFile << "P_" << processes.at(i).pid << " "
-                    << processes.at(i).arrival << " "
-                    << processes.at(i).burst << " "
-                    << processes.at(i).priority << endl;
+    processesFile << "P_" << processes.at(i).pid << " "
+		  << processes.at(i).arrival << " "
+		  << processes.at(i).burst << " "
+		  << processes.at(i).priority << endl;
   }
   processesFile.close();
   
@@ -231,13 +230,13 @@ int main(int argc, char **argv){
   // this will run partially and then core dump, so we commented it out
   else if (strcmp(schedulerType, SHORTEST_JOB_FIRST) == 0) {
     if (flags[PREEMPTIVE_FLAG]) {
-	// sjf.putQueue(CPU_FILE,4,true);
+      // sjf.putQueue(CPU_FILE,4,true);
       // sjf.loadProcessesFromFile(CPU_FILE, true);
       // sjf.executePremtion();
       cout << "\tUnfortunately Baby OS will core dump if preemptive SJF is used. Please use FCFS.\n";
     }
     else{
-    	// sjf.putQueue(CPU_FILE,4,false);
+      // sjf.putQueue(CPU_FILE,4,false);
       // sjf.loadProcessesFromFile(CPU_FILE, false);
       // sjf.execute();
       cout << "\tUnfortunately Baby OS will core dump if nonpreemptive SJF is used. Please use FCFS.\n";
@@ -247,39 +246,39 @@ int main(int argc, char **argv){
   // this will run partially and then core dump, so we commented it out
   else if (strcmp(schedulerType, PRIORITY) == 0) {
     if (flags[PREEMPTIVE_FLAG]) {
-    	// pri.putQueue(CPU_FILE,4,true);
+      // pri.putQueue(CPU_FILE,4,true);
       // pri.loadProcessesFromFile(CPU_FILE, true);
       // pri.executePremtion();
       cout << "\tUnfortunately Baby OS will core dump if preemptive Priority is used. Please use FCFS.\n";
     }
     else {
-    	// pri.putQueue(CPU_FILE,4,false);
+      // pri.putQueue(CPU_FILE,4,false);
       // pri.loadProcessesFromFile(CPU_FILE, false);
       // pri.execute();
       cout << "\tUnfortunately Baby OS will core dump if nonpreemptive Priority is used. Please use FCFS.\n";
     }
-        cout << "Scheduling failed.\n";
+    cout << "Scheduling failed.\n";
   } 
   // round robin was entirely commented out in the header, so we couldn't implement it
   else if (strcmp(schedulerType, ROUND_ROBIN) == 0) {
- 		cout << "\tUnfortunately Baby OS does not have RR implemented yet. Please use FCFS.\n";
- 		cout << "Scheduling failed.\n";
+    cout << "\tUnfortunately Baby OS does not have RR implemented yet. Please use FCFS.\n";
+    cout << "Scheduling failed.\n";
   }
   
   cout << "Processes paging...\n";
   if (strcmp(pagerType, FIRST_IN_FIRST_OUT) == 0 ||
-  	strcmp(pagerType, LEAST_RECENT_USED) == 0 ||
-    strcmp(pagerType, MOST_FREQUENT_USED) == 0 ||
-    strcmp(pagerType, RANDOM) == 0) {
+      strcmp(pagerType, LEAST_RECENT_USED) == 0 ||
+      strcmp(pagerType, MOST_FREQUENT_USED) == 0 ||
+      strcmp(pagerType, RANDOM) == 0) {
     
     int frameInt = atoi(frames);  
     int pageInt = atoi(pages);    
     int frameSizeInt = atoi(frameSize); 
-		string pid;
+    string pid;
     for (int i = 0; i < processes.size(); i++) {
-    	// redeclare the PageTable and PageReplacementSimulator in order to reset pageFaultCount and the pagetable for the next process 
+      // redeclare the PageTable and PageReplacementSimulator in order to reset pageFaultCount and the pagetable for the next process 
       PageReplacementSimulator pageSimulator;
-	    PageTable pageTable(pageInt);
+      PageTable pageTable(pageInt);
       pid = to_string(processes[i].pid);   
       pageSimulator.simulation(processes[i].addresses, pid, pageTable, frameInt, pageInt, frameSizeInt, flags[VERBOSE_FLAG], pagerType);
     }
@@ -305,16 +304,16 @@ bool addressErrorCheck(int pid,int pageSize, int pages, string address){
 bool loadErrorCheck(int pid, string arrival, string burst, string priority){
   bool error = false;
   if(!integerCheck(arrival) || atoi(arrival.c_str()) < 0){
-      cout << "\tERROR: Arrival time of " << PID_FORM << pid << " must be a non-negative integer\n";
-      error = true;
+    cout << "\tERROR: Arrival time of " << PID_FORM << pid << " must be a non-negative integer\n";
+    error = true;
   }
   if(!integerCheck(burst) || atoi(burst.c_str()) <= 0){
-      cout << "\tERROR: CPU burst of " << PID_FORM << pid << " must be a non-negative integer\n";
-      error = true;
+    cout << "\tERROR: CPU burst of " << PID_FORM << pid << " must be a non-negative integer\n";
+    error = true;
   }
   if(!integerCheck(priority) || (atoi(priority.c_str()) > MAX_PRIORITY || atoi(priority.c_str()) < MIN_PRIORITY)){
-      cout << "\tERROR: Priority of " << PID_FORM << pid << " must be an integer from 0 to 100\n";
-      error = true;
+    cout << "\tERROR: Priority of " << PID_FORM << pid << " must be an integer from 0 to 100\n";
+    error = true;
   }
   return error;
 }
@@ -325,17 +324,17 @@ bool integerCheck(string integerString){
   
   // makes a string of the prepended zeros and stops once a non-zero character is found
   for(int i=0;i<integerString.length();i++){
-  	if(integerString[i]=='0'){
-  		zeros += integerString[i];
-  	}
-  	else{
-  		i=integerString.length();
-  	}
+    if(integerString[i]=='0'){
+      zeros += integerString[i];
+    }
+    else{
+      i=integerString.length();
+    }
   }
-	// adds the zeros in front of the converted integer to account for any integers with prepended zeros
+  // adds the zeros in front of the converted integer to account for any integers with prepended zeros
   comparisonString = zeros + to_string(integer);
-	// if the integerString is a positive integer prepended with zero(s) or not, it will be accepted
-	// OR if the integerString is just a bunch of zeros then it will also be accepted
+  // if the integerString is a positive integer prepended with zero(s) or not, it will be accepted
+  // OR if the integerString is just a bunch of zeros then it will also be accepted
   if(!strcmp(zeros.c_str(),integerString.c_str()) || !strcmp(comparisonString.c_str(),integerString.c_str())) return true;
   return false;
 }

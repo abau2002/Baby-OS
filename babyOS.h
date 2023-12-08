@@ -51,15 +51,15 @@ using namespace std;
 #define CPU_FILE "FCFS_CPU_FILE"
 
 enum{
-	PREEMPTIVE_FLAG,
-	QUANTA_FLAG,
-	VERBOSE_FLAG,
-	MAX_FLAGS
+  PREEMPTIVE_FLAG,
+  QUANTA_FLAG,
+  VERBOSE_FLAG,
+  MAX_FLAGS
 };
 
 struct PCB{
-	int pid, arrival, burst, priority;
-	queue<int> addresses;
+  int pid, arrival, burst, priority;
+  queue<int> addresses;
 };
 
 // checks if an address is an integer and if it can exist in the number of pages of size pageSize
