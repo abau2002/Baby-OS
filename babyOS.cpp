@@ -312,7 +312,7 @@ bool loadErrorCheck(int pid, string arrival, string burst, string priority){
     error = true;
   }
   if(!integerCheck(priority) || (atoi(priority.c_str()) > MAX_PRIORITY || atoi(priority.c_str()) < MIN_PRIORITY)){
-    cout << "\tERROR: Priority of " << PID_FORM << pid << " must be an integer from 0 to 100\n";
+    cout << "\tERROR: Priority of " << PID_FORM << pid << " must be an integer from " << MIN_PRIORITY << " to " << MAX_PRIORITY << "\n";
     error = true;
   }
   return error;
